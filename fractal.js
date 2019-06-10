@@ -61,11 +61,9 @@ function mandelbrot(canvas, xmin, xmax, ymin, ymax, iterations) {
 }
  
 function drawFractal() {
-    var canvas = document.createElement('canvas');
-    canvas.width = 900;
-    canvas.height = 600;
-    
-    document.body.insertBefore(canvas, document.body.childNodes[0]);
+    var canvas = document.getElementById('fractal');
+    canvas.width = screen.width;
+    canvas.height = screen.height;
     
     mandelbrot(canvas, -2, 1, -1, 1, 1000);
 }
