@@ -65,5 +65,9 @@ function drawFractal() {
     canvas.width = screen.width;
     canvas.height = screen.height;
     
+    var date = new Date();
+    var startMs = date.getTime();
     mandelbrot(canvas, -2, 1, -1, 1, 1000);
+    var date = new Date();
+    console.log( 'Draw took ', date.getTime() - startMs, 'ms' );
 }
