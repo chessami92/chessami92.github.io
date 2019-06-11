@@ -62,12 +62,41 @@ function mandelbrot(canvas, xmin, xmax, ymin, ymax, iterations) {
  
 function drawFractal() {
     var canvas = document.getElementById('fractal');
-    canvas.width = screen.width;
-    canvas.height = screen.height;
-    
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    var queryDict = {}
+    location.search.substr( 1 ).split( "&" ).forEach( function( item ) {queryDict[item.split( "=" )[0]] = item.split( "=" )[1]} )
+
+    var centerReal = queryDict["centerReal"];
+    var centerI = queryDict["centerI"];
+    var width = queryDict["width"];
+    if( !centerReal ) {
+        centerReal = -0.5;
+    }
+    if( !centerI ) {
+        centerI = 0;
+    }
+    if( !width ) {
+        // At least show -2 to 1 on real, -1 to 1 on imaginary
+        width = 3;
+        var height = width * window.innerHeight / window.innerWidth;
+        if( height < 2 ) {
+            var scale = 2 / height;
+            height = 2;
+            width *= scale;
+        }
+    }
+    var height = width * window.innerHeight / window.innerWidth;
+
+    var startReal = centerReal - width / 2;
+    var endReal = centerReal + width / 2;
+    var startI = centerI - height / 2;
+    var endI = centerI + height / 2;
+
     var date = new Date();
     var startMs = date.getTime();
-    mandelbrot(canvas, -2, 1, -1, 1, 1000);
+    mandelbrot( canvas, startReal, endReal, startI, endI, 1000 );
     var date = new Date();
     console.log( 'Draw took ', date.getTime() - startMs, 'ms' );
 }
