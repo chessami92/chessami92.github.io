@@ -59,18 +59,32 @@ function mandelbrot(canvas, xmin, xmax, ymin, ymax, iterations) {
  
     ctx.putImageData(img, 0, 0);
 }
+
+var width;
+var height;
+
+var startReal;
+var startI;
+
+function canvasClick() {
+    var centerReal = startReal + width * ( event.clientX / window.innerWidth );
+    var centerI = startI + height * ( event.clientY / window.innerHeight );
+    width /= 2;
+    window.location.href = "fractal.html?centerReal=" + centerReal + "&centerI=" + centerI + "&width=" + width;
+}
  
-function drawFractal() {
+function main() {
     var canvas = document.getElementById('fractal');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    canvas.addEventListener( 'click', canvasClick );
 
     var queryDict = {}
     location.search.substr( 1 ).split( "&" ).forEach( function( item ) {queryDict[item.split( "=" )[0]] = item.split( "=" )[1]} )
 
-    var centerReal = queryDict["centerReal"];
-    var centerI = queryDict["centerI"];
-    var width = queryDict["width"];
+    var centerReal = parseFloat( queryDict["centerReal"] );
+    var centerI = parseFloat( queryDict["centerI"] );
+    width = parseFloat( queryDict["width"] );
     if( !centerReal ) {
         centerReal = -0.5;
     }
@@ -80,18 +94,18 @@ function drawFractal() {
     if( !width ) {
         // At least show -2 to 1 on real, -1 to 1 on imaginary
         width = 3;
-        var height = width * window.innerHeight / window.innerWidth;
+        height = width * window.innerHeight / window.innerWidth;
         if( height < 2 ) {
             var scale = 2 / height;
             height = 2;
             width *= scale;
         }
     }
-    var height = width * window.innerHeight / window.innerWidth;
+    height = width * window.innerHeight / window.innerWidth;
 
-    var startReal = centerReal - width / 2;
+    startReal = centerReal - width / 2;
     var endReal = centerReal + width / 2;
-    var startI = centerI - height / 2;
+    startI = centerI - height / 2;
     var endI = centerI + height / 2;
 
     var date = new Date();
