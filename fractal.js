@@ -1,4 +1,16 @@
-function mandelIter(cx, cy, maxIter) {
+// Dimensions of current frame
+var width;
+var height;
+var startReal;
+var startI;
+
+// Rendered fractal
+var img;
+// Image for displaying individual iterations
+var cycleImg;
+var cycleCtx;
+
+function mandelIter(cx, cy, maxIter, callback ) {
     var x = 0.0;
     var y = 0.0;
     var xx = 0;
@@ -12,6 +24,9 @@ function mandelIter(cx, cy, maxIter) {
         yy = y * y;
         x = xx - yy + cx;
         y = xy + xy + cy;
+        if( callback ) {
+            callback( x, y );
+        }
     }
     return maxIter - i;
 }
@@ -21,7 +36,7 @@ function mandelbrot(canvas, xmin, xmax, ymin, ymax, iterations) {
     var height = canvas.height;
  
     var ctx = canvas.getContext('2d');
-    var img = ctx.getImageData(0, 0, width, height);
+    img = ctx.getImageData(0, 0, width, height);
     var pix = img.data;
  
     for (var ix = 0; ix < width; ++ix) {
@@ -60,17 +75,67 @@ function mandelbrot(canvas, xmin, xmax, ymin, ymax, iterations) {
     ctx.putImageData(img, 0, 0);
 }
 
-var width;
-var height;
+function getReal( clientX ) {
+    return startReal + width * ( clientX / window.innerWidth );
+}
 
-var startReal;
-var startI;
+function getI( clientY ) {
+    return startI + height * ( clientY / window.innerHeight );
+}
+
+function getX( real ) {
+    return ( real - startReal ) / width * window.innerWidth;
+}
+
+function getY( i ) {
+    return ( i - startI ) / height * window.innerHeight;
+}
 
 function canvasClick() {
-    var centerReal = startReal + width * ( event.clientX / window.innerWidth );
-    var centerI = startI + height * ( event.clientY / window.innerHeight );
+    var centerReal = getReal( event.clientX );
+    var centerI = getI( event.clientY );
     width /= 2;
     window.location.href = "fractal.html?centerReal=" + centerReal + "&centerI=" + centerI + "&width=" + width;
+}
+
+// var lastReal;
+// var lastI;
+
+function iterationTraceCallback( real, i ) {
+    // var magnitude = ( real ** 2 + i ** 2 ) ** 0.5;
+    // var distance = ( ( real - lastReal ) ** 2 + ( i - lastI ) ** 2 ) ** 0.5;
+    // console.log( 'real: ' + real + ' i: ' + i + ' magnitude: ' + magnitude + ' distance: ' + distance );
+
+    cycleCtx.lineTo( getX( real ), getY( i ) );
+
+    // lastReal = real;
+    // lastI = i;
+}
+
+function canvasMouseMove() {
+    var canvas = document.getElementById('fractal');
+    canvas.removeEventListener( 'mousemove', canvasMouseMove, false );
+
+    // Copy off the old image and set up a new context
+    var ctx = canvas.getContext( '2d' );
+    cycleImg = ctx.createImageData( canvas.width, canvas.height );
+    cycleImg.data.set( img.data );
+    ctx.putImageData( cycleImg, 0, 0 );
+    cycleCtx = canvas.getContext( '2d' );
+    cycleCtx.lineWidth = 2;
+    ctx.strokeStyle = "#FFFFFF";
+    cycleCtx.beginPath();
+    cycleCtx.moveTo( getX( 0 ), getY( 0 ) );
+
+    var centerReal = getReal( event.clientX );
+    var centerI = getI( event.clientY );
+    lastReal = 0;
+    lastI = 0;
+    mandelIter( centerReal, centerI, 1000, iterationTraceCallback );
+
+    cycleCtx.stroke();
+
+    canvas.addEventListener( 'mousemove', canvasMouseMove, false );
 }
  
 function main() {
@@ -78,6 +143,7 @@ function main() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     canvas.addEventListener( 'click', canvasClick );
+    canvas.addEventListener( 'mousemove', canvasMouseMove, false );
 
     var queryDict = {}
     location.search.substr( 1 ).split( "&" ).forEach( function( item ) {queryDict[item.split( "=" )[0]] = item.split( "=" )[1]} )
