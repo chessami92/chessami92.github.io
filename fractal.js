@@ -1,3 +1,5 @@
+var canvas;
+
 // Dimensions of current frame
 var width;
 var height;
@@ -10,7 +12,18 @@ var img;
 var cycleImg;
 var cycleCtx;
 
-function mandelIter(cx, cy, maxIter, callback ) {
+// Variables for tracking individual iterations
+var traceR;
+var traceI;
+var lastTraceR;
+var lastTraceI;
+var traceCR;
+var traceCI;
+var traceIter;
+var traceTimeout;
+var traceFast;
+
+function mandelIter(cx, cy, maxIter ) {
     var x = 0.0;
     var y = 0.0;
     var xx = 0;
@@ -24,13 +37,10 @@ function mandelIter(cx, cy, maxIter, callback ) {
         yy = y * y;
         x = xx - yy + cx;
         y = xy + xy + cy;
-        if( callback ) {
-            callback( x, y );
-        }
     }
     return maxIter - i;
 }
- 
+
 function mandelbrot(canvas, xmin, xmax, ymin, ymax, iterations) {
     var width = canvas.width;
     var height = canvas.height;
@@ -98,23 +108,49 @@ function canvasClick() {
     window.location.href = "fractal.html?centerReal=" + centerReal + "&centerI=" + centerI + "&width=" + width;
 }
 
-// var lastReal;
-// var lastI;
+function iterationTrace() {
+    var rr = 0;
+    var ii = 0;
+    var ri = 0;
 
-function iterationTraceCallback( real, i ) {
-    // var magnitude = ( real ** 2 + i ** 2 ) ** 0.5;
-    // var distance = ( ( real - lastReal ) ** 2 + ( i - lastI ) ** 2 ) ** 0.5;
-    // console.log( 'real: ' + real + ' i: ' + i + ' magnitude: ' + magnitude + ' distance: ' + distance );
+    if( false == traceFast ) {
+        cycleCtx.strokeStyle = "#999999";
+        cycleCtx.beginPath();
+        cycleCtx.moveTo( getX( lastTraceR ), getY( lastTraceI ) );
+        cycleCtx.lineTo( getX( traceR ), getY( traceI ) );
+        cycleCtx.stroke();
+    }
 
-    cycleCtx.lineTo( getX( real ), getY( i ) );
+    lastTraceR = traceR;
+    lastTraceI = traceI;
+ 
+    ri = traceR * traceI;
+    rr = traceR * traceR;
+    ii = traceI * traceI;
+    traceR = rr - ii + traceCR;
+    traceI = ri + ri + traceCI;
 
-    // lastReal = real;
-    // lastI = i;
+    traceIter--;
+
+    if( rr + ii > 4 ) {
+        traceIter = 0;
+    }
+
+    if( false == traceFast ) {
+        if( traceIter > 0 ) {
+            traceTimeout = setTimeout( iterationTrace, 100 );
+        }
+    }
+
+    cycleCtx.strokeStyle = "#FFFFFF";
+    cycleCtx.beginPath();
+    cycleCtx.moveTo( getX( lastTraceR ), getY( lastTraceI ) );
+    cycleCtx.lineTo( getX( traceR ), getY( traceI ) );
+    cycleCtx.stroke();
 }
 
 function canvasMouseMove() {
-    var canvas = document.getElementById('fractal');
-    canvas.removeEventListener( 'mousemove', canvasMouseMove, false );
+    clearTimeout( traceTimeout );
 
     // Copy off the old image and set up a new context
     var ctx = canvas.getContext( '2d' );
@@ -123,27 +159,28 @@ function canvasMouseMove() {
     ctx.putImageData( cycleImg, 0, 0 );
     cycleCtx = canvas.getContext( '2d' );
     cycleCtx.lineWidth = 2;
-    ctx.strokeStyle = "#FFFFFF";
-    cycleCtx.beginPath();
-    cycleCtx.moveTo( getX( 0 ), getY( 0 ) );
 
-    var centerReal = getReal( event.clientX );
-    var centerI = getI( event.clientY );
-    lastReal = 0;
-    lastI = 0;
-    mandelIter( centerReal, centerI, 1000, iterationTraceCallback );
-
-    cycleCtx.stroke();
-
-    canvas.addEventListener( 'mousemove', canvasMouseMove, false );
+    traceR = 0;
+    traceI = 0
+    lastTraceR = 0;
+    lastTraceI = 0;
+    traceCR = getReal( event.clientX );
+    traceCI = getI( event.clientY );
+    traceIter = 1000;
+    if( true == traceFast ) {
+        while( traceIter > 0 ) {
+            iterationTrace();
+        }
+    } else {
+        iterationTrace();
+    }
 }
  
 function main() {
-    var canvas = document.getElementById('fractal');
+    canvas = document.getElementById('fractal');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     canvas.addEventListener( 'click', canvasClick );
-    canvas.addEventListener( 'mousemove', canvasMouseMove, false );
 
     var queryDict = {}
     location.search.substr( 1 ).split( "&" ).forEach( function( item ) {queryDict[item.split( "=" )[0]] = item.split( "=" )[1]} )
@@ -179,4 +216,20 @@ function main() {
     mandelbrot( canvas, startReal, endReal, startI, endI, 1000 );
     var date = new Date();
     console.log( 'Draw took ', date.getTime() - startMs, 'ms' );
+}
+
+function handleCycleClick( radio ) {
+    if( "fast" == radio.value ) {
+        canvas.addEventListener( 'mousemove', canvasMouseMove, false );
+        traceFast = true;
+    } else if( "slow" == radio.value ) {
+        canvas.addEventListener( 'mousemove', canvasMouseMove, false );
+        traceFast = false;
+    } else { // if ( "none" == radio.value ) {
+        canvas.removeEventListener( 'mousemove', canvasMouseMove, false );
+
+        // Restore the old image
+        var ctx = canvas.getContext( '2d' );
+        ctx.putImageData( img, 0, 0 );
+    }
 }

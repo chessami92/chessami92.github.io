@@ -7,6 +7,12 @@
         <script src="fractal.js"></script>
     </head>
     <body onload="main()">
+        <span class="cycle" id="cycleType">
+            Iteration Display:
+            <input type="radio" name="cycle" value="fast" onclick="handleCycleClick( this )">Fast
+            <input type="radio" name="cycle" value="slow" onclick="handleCycleClick( this )">Slow
+            <input type="radio" name="cycle" value="none" checked onclick="handleCycleClick( this )">None
+        </span>
         <canvas id="fractal"></canvas>
     </body>
 </html>
