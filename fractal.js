@@ -63,12 +63,27 @@ function mandelIter(cx, cy) {
     var xy = 0;
  
     var i;
+    var minDistance = Infinity;
+    var cycle = 0;
     for( i = 0; ( i <= maxIter ) && ( xx + yy <= 4 ); i++ ) {
         xy = x * y;
         xx = x * x;
         yy = y * y;
         x = xx - yy + cx;
         y = xy + xy + cy;
+
+        if( ( i != 0 ) && ( i < 20 ) ) {
+            var distance = Math.abs( x - cx ) + Math.abs( y - cy );
+            if( distance < 0.001 ) {
+                i = maxIter + 1;
+                break;
+            } else if( distance < minDistance ) {
+                minDistance = distance;
+                if( 0 == cycle ) {
+                    cycle = i;
+                }
+            }
+        }
     }
     return i;
 }
