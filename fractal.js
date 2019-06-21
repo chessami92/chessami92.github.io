@@ -1,6 +1,7 @@
 var canvas;
 
 // Dimensions of current frame
+var maxIter = 1000;
 var width;
 var height;
 var startReal;
@@ -23,25 +24,56 @@ var traceIter;
 var traceTimeout;
 var traceFast;
 
-function mandelIter(cx, cy, maxIter ) {
+function setupIter( cR, cI ) {
+    traceR = 0;
+    traceI = 0
+    lastTraceR = 0;
+    lastTraceI = 0;
+    traceIter = 0;
+    traceCR = cR;
+    traceCI = cI;
+}
+
+// Return true if done iterating
+function iterLoop() {
+    var rr = 0;
+    var ii = 0;
+    var ri = 0;
+
+    ri = traceR * traceI;
+    rr = traceR * traceR;
+    ii = traceI * traceI;
+    traceR = rr - ii + traceCR;
+    traceI = ri + ri + traceCI;
+
+    traceIter++
+
+    if( ( rr + ii > 4 ) || ( traceIter > maxIter ) ) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function mandelIter(cx, cy) {
     var x = 0.0;
     var y = 0.0;
     var xx = 0;
     var yy = 0;
     var xy = 0;
  
-    var i = maxIter;
-    while (i-- && xx + yy <= 4) {
+    var i;
+    for( i = 0; ( i <= maxIter ) && ( xx + yy <= 4 ); i++ ) {
         xy = x * y;
         xx = x * x;
         yy = y * y;
         x = xx - yy + cx;
         y = xy + xy + cy;
     }
-    return maxIter - i;
+    return i;
 }
 
-function mandelbrot(canvas, xmin, xmax, ymin, ymax, iterations) {
+function mandelbrot(canvas, xmin, xmax, ymin, ymax ) {
     var width = canvas.width;
     var height = canvas.height;
  
@@ -53,15 +85,15 @@ function mandelbrot(canvas, xmin, xmax, ymin, ymax, iterations) {
         for (var iy = 0; iy < height; ++iy) {
             var x = xmin + (xmax - xmin) * ix / (width - 1);
             var y = ymin + (ymax - ymin) * iy / (height - 1);
-            var i = mandelIter(x, y, iterations);
+            var i = mandelIter(x, y);
             var ppos = 4 * (width * iy + ix);
  
-            if (i > iterations) {
+            if (i > maxIter) {
                 pix[ppos] = 0;
                 pix[ppos + 1] = 0;
                 pix[ppos + 2] = 0;
             } else {
-                var c = 3 * Math.log(i) / Math.log(iterations - 1.0);
+                var c = 3 * Math.log(i) / Math.log(maxIter - 1.0);
  
                 if (c < 1) {
                     pix[ppos] = 255 * c;
@@ -109,10 +141,6 @@ function canvasClick() {
 }
 
 function iterationTrace() {
-    var rr = 0;
-    var ii = 0;
-    var ri = 0;
-
     if( false == traceFast ) {
         cycleCtx.strokeStyle = "#999999";
         cycleCtx.beginPath();
@@ -124,22 +152,10 @@ function iterationTrace() {
     lastTraceR = traceR;
     lastTraceI = traceI;
  
-    ri = traceR * traceI;
-    rr = traceR * traceR;
-    ii = traceI * traceI;
-    traceR = rr - ii + traceCR;
-    traceI = ri + ri + traceCI;
+    var iterationComplete = iterLoop();
 
-    traceIter--;
-
-    if( rr + ii > 4 ) {
-        traceIter = 0;
-    }
-
-    if( false == traceFast ) {
-        if( traceIter > 0 ) {
-            traceTimeout = setTimeout( iterationTrace, 100 );
-        }
+    if( ( false == traceFast ) && ( false == iterationComplete ) ) {
+        traceTimeout = setTimeout( iterationTrace, 100 );
     }
 
     cycleCtx.strokeStyle = "#FFFFFF";
@@ -147,6 +163,8 @@ function iterationTrace() {
     cycleCtx.moveTo( getX( lastTraceR ), getY( lastTraceI ) );
     cycleCtx.lineTo( getX( traceR ), getY( traceI ) );
     cycleCtx.stroke();
+
+    return iterationComplete;
 }
 
 function canvasMouseMove() {
@@ -160,16 +178,9 @@ function canvasMouseMove() {
     cycleCtx = canvas.getContext( '2d' );
     cycleCtx.lineWidth = 2;
 
-    traceR = 0;
-    traceI = 0
-    lastTraceR = 0;
-    lastTraceI = 0;
-    traceCR = getReal( event.clientX );
-    traceCI = getI( event.clientY );
-    traceIter = 1000;
+    setupIter( getReal( event.clientX ), getI( event.clientY ) );
     if( true == traceFast ) {
-        while( traceIter > 0 ) {
-            iterationTrace();
+        while( false == iterationTrace() ) {
         }
     } else {
         iterationTrace();
@@ -213,7 +224,7 @@ function main() {
 
     var date = new Date();
     var startMs = date.getTime();
-    mandelbrot( canvas, startReal, endReal, startI, endI, 1000 );
+    mandelbrot( canvas, startReal, endReal, startI, endI );
     var date = new Date();
     console.log( 'Draw took ', date.getTime() - startMs, 'ms' );
 }
