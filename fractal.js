@@ -171,7 +171,7 @@ function canvasClick() {
     var centerReal = getReal( event.clientX );
     var centerI = getI( event.clientY );
     width /= 2;
-    window.location.href = "fractal.html?centerReal=" + centerReal + "&centerI=" + centerI + "&width=" + width;
+    window.location.href = window.location.href.substr( 0, window.location.href.lastIndexOf( '?' ) ) + "?centerReal=" + centerReal + "&centerI=" + centerI + "&width=" + width;
 }
 
 function iterationTrace() {
@@ -222,6 +222,8 @@ function canvasMouseMove() {
 }
  
 function main() {
+    console.log( window.location.href );
+
     window.addEventListener( 'resize', main );
 
     canvas = document.getElementById('fractal');
