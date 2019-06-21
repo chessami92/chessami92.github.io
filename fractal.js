@@ -1,7 +1,8 @@
 var canvas;
 
 // Dimensions of current frame
-var maxIter = 1000;
+var maxIter;
+var equalityLimit;
 var width;
 var height;
 var startReal;
@@ -78,7 +79,7 @@ function mandelIter( cx, cy, forTrace ) {
 
         if( i != 0 ) {
             var distance = Math.abs( x - cx ) + Math.abs( y - cy );
-            if( distance < 0.001 ) {
+            if( distance < equalityLimit ) {
                 if( false == forTrace ) {
                     i = maxIter + 1;
                 }
@@ -92,7 +93,7 @@ function mandelIter( cx, cy, forTrace ) {
 
         if( ( 0 != cycle ) && ( 0 == ( i % cycle ) ) ) {
             var distance = Math.abs( x - cycleR ) + Math.abs( y - cycleI );
-            if( distance < 0.001 ) {
+            if( distance < equalityLimit ) {
                 if( false == forTrace ) {
                     i = maxIter + 1;
                 }
@@ -256,6 +257,9 @@ function main() {
     var endReal = centerReal + width / 2;
     startI = centerI - height / 2;
     var endI = centerI + height / 2;
+
+    maxIter = 1000 * 2 / Math.pow( endReal - startReal, 1 / 4 );
+    equalityLimit = 1 / ( Math.pow( maxIter, 2 ) );
 
     var date = new Date();
     var startMs = date.getTime();
