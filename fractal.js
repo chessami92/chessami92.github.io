@@ -221,6 +221,8 @@ function canvasMouseMove() {
 }
  
 function main() {
+    window.addEventListener( 'resize', main );
+
     canvas = document.getElementById('fractal');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
