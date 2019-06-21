@@ -21,15 +21,17 @@ var lastTraceI;
 var traceCR;
 var traceCI;
 var traceIter;
+var traceMaxIter;
 var traceTimeout;
 var traceFast;
 
-function setupIter( cR, cI ) {
+function setupIter( cR, cI, traceFast ) {
     traceR = 0;
     traceI = 0
     lastTraceR = 0;
     lastTraceI = 0;
     traceIter = 0;
+    traceMaxIter = mandelIter( cR, cI, !traceFast );
     traceCR = cR;
     traceCI = cI;
 }
@@ -48,14 +50,14 @@ function iterLoop() {
 
     traceIter++
 
-    if( ( rr + ii > 4 ) || ( traceIter > maxIter ) ) {
+    if( traceIter > traceMaxIter ) {
         return true;
     } else {
         return false;
     }
 }
 
-function mandelIter(cx, cy) {
+function mandelIter( cx, cy, forTrace ) {
     var x = 0.0;
     var y = 0.0;
     var xx = 0;
@@ -77,7 +79,9 @@ function mandelIter(cx, cy) {
         if( i != 0 ) {
             var distance = Math.abs( x - cx ) + Math.abs( y - cy );
             if( distance < 0.001 ) {
-                i = maxIter + 1;
+                if( false == forTrace ) {
+                    i = maxIter + 1;
+                }
                 break;
             } else if( ( distance * 10 ) < minDistance ) {
                 // This is significantly closer, this is probably the actual cycle number
@@ -89,7 +93,9 @@ function mandelIter(cx, cy) {
         if( ( 0 != cycle ) && ( 0 == ( i % cycle ) ) ) {
             var distance = Math.abs( x - cycleR ) + Math.abs( y - cycleI );
             if( distance < 0.001 ) {
-                i = maxIter + 1;
+                if( false == forTrace ) {
+                    i = maxIter + 1;
+                }
                 break;
             } else {
                 cycleR = x;
@@ -112,7 +118,7 @@ function mandelbrot(canvas, xmin, xmax, ymin, ymax ) {
         for (var iy = 0; iy < height; ++iy) {
             var x = xmin + (xmax - xmin) * ix / (width - 1);
             var y = ymin + (ymax - ymin) * iy / (height - 1);
-            var i = mandelIter(x, y);
+            var i = mandelIter( x, y, false );
             var ppos = 4 * (width * iy + ix);
  
             if (i > maxIter) {
@@ -205,7 +211,7 @@ function canvasMouseMove() {
     cycleCtx = canvas.getContext( '2d' );
     cycleCtx.lineWidth = 2;
 
-    setupIter( getReal( event.clientX ), getI( event.clientY ) );
+    setupIter( getReal( event.clientX ), getI( event.clientY ), traceFast );
     if( true == traceFast ) {
         while( false == iterationTrace() ) {
         }
