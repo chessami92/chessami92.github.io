@@ -13,6 +13,12 @@
             <input type="radio" name="cycle" value="slow" onclick="handleCycleClick( this )">Slow
             <input type="radio" name="cycle" value="none" checked onclick="handleCycleClick( this )">None
         </span>
+        <span class="preview" id="previewType">
+            Preview:
+            <input type="radio" name="preview" value="zoom" onclick="handlePreviewClick( this )">Zoom
+            <input type="radio" name="preview" value="none" checked onclick="handlePreviewClick( this )">None
+        </span>
+        <canvas id="fractalPreview"></canvas>
         <canvas id="fractal"></canvas>
     </body>
 </html>

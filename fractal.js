@@ -10,6 +10,7 @@ var startI;
 
 // Radio options
 var cycleType;
+var previewType;
 
 // Rendered fractal
 var img;
@@ -110,13 +111,13 @@ function mandelIter( cx, cy, forTrace ) {
     return i;
 }
 
-function mandelbrot(canvas, xmin, xmax, ymin, ymax ) {
+function mandelbrot(canvas, saveImg, xmin, xmax, ymin, ymax ) {
     var width = canvas.width;
     var height = canvas.height;
  
     var ctx = canvas.getContext('2d');
-    img = ctx.getImageData(0, 0, width, height);
-    var pix = img.data;
+    var canvasImg = ctx.getImageData(0, 0, width, height);
+    var pix = canvasImg.data;
  
     for (var ix = 0; ix < width; ++ix) {
         for (var iy = 0; iy < height; ++iy) {
@@ -151,7 +152,10 @@ function mandelbrot(canvas, xmin, xmax, ymin, ymax ) {
         }
     }
  
-    ctx.putImageData(img, 0, 0);
+    ctx.putImageData( canvasImg, 0, 0 );
+    if( saveImg ) {
+        img = canvasImg;
+    }
 }
 
 function getReal( clientX ) {
@@ -178,7 +182,8 @@ function canvasClick() {
         "?centerReal=" + centerReal +
         "&centerI=" + centerI +
         "&width=" + width +
-        "&cycle=" + cycleType;
+        "&cycle=" + cycleType +
+        "&preview=" + previewType ;
 }
 
 function iterationTrace() {
@@ -227,6 +232,21 @@ function canvasMouseMove() {
         iterationTrace();
     }
 }
+
+function previewZoomMouseMove() {
+    var centerReal = getReal( event.clientX );
+    var centerI = getI( event.clientY );
+    var zoomWidth = width / 32;
+    var zoomHeight = zoomWidth * window.innerHeight / window.innerWidth;
+    var rMin = centerReal - zoomWidth / 2;
+    var rMax = centerReal + zoomWidth / 2;
+    var iMin = centerI - zoomHeight / 2;
+    var iMax = centerI + zoomHeight / 2;
+
+    var fractalPreview = document.getElementById( 'fractalPreview' );
+
+    mandelbrot( fractalPreview, false, rMin, rMax, iMin, iMax );
+}
  
 function main() {
     window.addEventListener( 'resize', main );
@@ -270,11 +290,12 @@ function main() {
 
     var date = new Date();
     var startMs = date.getTime();
-    mandelbrot( canvas, startReal, endReal, startI, endI );
+    mandelbrot( canvas, true, startReal, endReal, startI, endI );
     var date = new Date();
     console.log( 'Draw took ', date.getTime() - startMs, 'ms' );
 
     setCycleType( queryDict['cycle'] );
+    setPreviewType( queryDict['preview'] );
 }
 
 function getChecked( groupName ) {
@@ -321,5 +342,28 @@ function handleCycleClick( radio ) {
         // Restore the old image
         var ctx = canvas.getContext( '2d' );
         ctx.putImageData( img, 0, 0 );
+    }
+}
+
+function setPreviewType( urlPreviewType ) {
+    if( urlPreviewType ) {
+        var radio = setChecked( 'preview', urlPreviewType );
+        handlePreviewClick( radio );
+    } else {
+        handlePreviewClick( getChecked( 'preview' ) );
+    }
+}
+
+function handlePreviewClick( radio ) {
+    previewType = radio.value;
+    var fractalPreview = document.getElementById( 'fractalPreview' );
+    fractalPreview.style.display = 'block';
+
+    if( "zoom" == radio.value ) {
+        canvas.addEventListener( 'mousemove', previewZoomMouseMove, false );
+    } else { // if ( "none" == radio.value ) {
+        canvas.removeEventListener( 'mousemove', previewZoomMouseMove, false );
+
+        fractalPreview.style.display = 'none';
     }
 }
