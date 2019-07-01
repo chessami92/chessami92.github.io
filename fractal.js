@@ -8,6 +8,9 @@ var height;
 var startReal;
 var startI;
 
+// Radio options
+var cycleType;
+
 // Rendered fractal
 var img;
 // Image for displaying individual iterations
@@ -171,7 +174,11 @@ function canvasClick() {
     var centerReal = getReal( event.clientX );
     var centerI = getI( event.clientY );
     width /= 2;
-    window.location.href = window.location.href.substr( 0, window.location.href.lastIndexOf( '?' ) ) + "?centerReal=" + centerReal + "&centerI=" + centerI + "&width=" + width;
+    window.location.href = window.location.href.substr( 0, window.location.href.lastIndexOf( '?' ) ) +
+        "?centerReal=" + centerReal +
+        "&centerI=" + centerI +
+        "&width=" + width +
+        "&cycle=" + cycleType;
 }
 
 function iterationTrace() {
@@ -222,8 +229,6 @@ function canvasMouseMove() {
 }
  
 function main() {
-    console.log( window.location.href );
-
     window.addEventListener( 'resize', main );
 
     canvas = document.getElementById('fractal');
@@ -268,9 +273,42 @@ function main() {
     mandelbrot( canvas, startReal, endReal, startI, endI );
     var date = new Date();
     console.log( 'Draw took ', date.getTime() - startMs, 'ms' );
+
+    setCycleType( queryDict['cycle'] );
+}
+
+function getChecked( groupName ) {
+    var radios = document.getElementsByName( groupName );
+    for( i = 0; i < radios.length; i++ ) {
+        if( radios[i].checked ) {
+            return radios[i];
+        }
+    }
+    return null;
+}
+
+function setChecked( groupName, value ) {
+    var radios = document.getElementsByName( groupName );
+    for( i = 0; i < radios.length; i++ ) {
+        if( value == radios[i].value ) {
+            radios[i].checked = true;
+            return radios[i];
+        }
+    }
+}
+
+function setCycleType( urlCycleType ) {
+    if( urlCycleType ) {
+        var radio = setChecked( 'cycle', urlCycleType );
+        handleCycleClick( radio );
+    } else {
+        handleCycleClick( getChecked( 'cycle' ) );
+    }
 }
 
 function handleCycleClick( radio ) {
+    cycleType = radio.value;
+
     if( "fast" == radio.value ) {
         canvas.addEventListener( 'mousemove', canvasMouseMove, false );
         traceFast = true;
