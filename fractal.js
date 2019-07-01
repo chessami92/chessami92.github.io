@@ -36,7 +36,7 @@ function setupIter( cR, cI, traceFast ) {
     lastTraceR = 0;
     lastTraceI = 0;
     traceIter = 0;
-    traceMaxIter = mandelIter( cR, cI, !traceFast );
+    traceMaxIter = mandelIter( cR, cI, null, null, !traceFast );
     traceCR = cR;
     traceCI = cI;
 }
@@ -62,7 +62,7 @@ function iterLoop() {
     }
 }
 
-function mandelIter( cx, cy, forTrace ) {
+function mandelIter( cx, cy, juliaR, juliaI, forTrace ) {
     var x = 0.0;
     var y = 0.0;
     var xx = 0;
@@ -74,12 +74,24 @@ function mandelIter( cx, cy, forTrace ) {
     var cycle = 0;
     var cycleR = cx;
     var cycleI = cy;
+
+    var adderR;
+    var adderI;
+    if( juliaR && juliaI ) {
+        adderR = juliaR;
+        adderI = juliaI;
+        x = cx;
+        y = cy;
+    } else {
+        adderR = cx;
+        adderI = cy;
+    }
     for( i = 0; ( i <= maxIter ) && ( xx + yy <= 4 ); i++ ) {
         xy = x * y;
         xx = x * x;
         yy = y * y;
-        x = xx - yy + cx;
-        y = xy + xy + cy;
+        x = xx - yy + adderR;
+        y = xy + xy + adderI;
 
         if( i != 0 ) {
             var distance = Math.abs( x - cx ) + Math.abs( y - cy );
@@ -111,7 +123,7 @@ function mandelIter( cx, cy, forTrace ) {
     return i;
 }
 
-function mandelbrot(canvas, saveImg, xmin, xmax, ymin, ymax ) {
+function mandelbrot(canvas, saveImg, xmin, xmax, ymin, ymax, juliaR, juliaI ) {
     var width = canvas.width;
     var height = canvas.height;
  
@@ -123,7 +135,7 @@ function mandelbrot(canvas, saveImg, xmin, xmax, ymin, ymax ) {
         for (var iy = 0; iy < height; ++iy) {
             var x = xmin + (xmax - xmin) * ix / (width - 1);
             var y = ymin + (ymax - ymin) * iy / (height - 1);
-            var i = mandelIter( x, y, false );
+            var i = mandelIter( x, y, juliaR, juliaI, false );
             var ppos = 4 * (width * iy + ix);
  
             if (i > maxIter) {
@@ -245,7 +257,39 @@ function previewZoomMouseMove() {
 
     var fractalPreview = document.getElementById( 'fractalPreview' );
 
-    mandelbrot( fractalPreview, false, rMin, rMax, iMin, iMax );
+    mandelbrot( fractalPreview, false, rMin, rMax, iMin, iMax, null, null );
+}
+
+function previewJuliaMouseMove() {
+    var centerReal = getReal( event.clientX );
+    var centerI = getI( event.clientY );
+
+    var zoomHeight = 2;
+    var zoomWidth = zoomHeight * window.innerWidth / window.innerHeight;
+    var rMin = 0 - zoomWidth / 2;
+    var rMax = 0 + zoomWidth / 2;
+    var iMin = 0 - zoomHeight / 2;
+    var iMax = 0 + zoomHeight / 2;
+
+    var fractalPreview = document.getElementById( 'fractalPreview' );
+
+    mandelbrot( fractalPreview, false, rMin, rMax, iMin, iMax, centerReal, centerI );
+}
+
+function previewJuliaZoomedMouseMove() {
+    var centerReal = getReal( event.clientX );
+    var centerI = getI( event.clientY );
+
+    var zoomWidth = width / 8;
+    var zoomHeight = zoomWidth * window.innerHeight / window.innerWidth;
+    var rMin = centerReal - zoomWidth / 2;
+    var rMax = centerReal + zoomWidth / 2;
+    var iMin = centerI - zoomHeight / 2;
+    var iMax = centerI + zoomHeight / 2;
+
+    var fractalPreview = document.getElementById( 'fractalPreview' );
+
+    mandelbrot( fractalPreview, false, rMin, rMax, iMin, iMax, centerReal, centerI );
 }
  
 function main() {
@@ -290,7 +334,7 @@ function main() {
 
     var date = new Date();
     var startMs = date.getTime();
-    mandelbrot( canvas, true, startReal, endReal, startI, endI );
+    mandelbrot( canvas, true, startReal, endReal, startI, endI, null, null );
     var date = new Date();
     console.log( 'Draw took ', date.getTime() - startMs, 'ms' );
 
@@ -359,11 +403,17 @@ function handlePreviewClick( radio ) {
     var fractalPreview = document.getElementById( 'fractalPreview' );
     fractalPreview.style.display = 'block';
 
+    canvas.removeEventListener( 'mousemove', previewZoomMouseMove, false );
+    canvas.removeEventListener( 'mousemove', previewJuliaMouseMove, false );
+    canvas.removeEventListener( 'mousemove', previewJuliaZoomedMouseMove, false );
+
     if( "zoom" == radio.value ) {
         canvas.addEventListener( 'mousemove', previewZoomMouseMove, false );
+    } else if( "julia" == radio.value ) {
+        canvas.addEventListener( 'mousemove', previewJuliaMouseMove, false );
+    } else if( "juliaZoom" == radio.value ) {
+        canvas.addEventListener( 'mousemove', previewJuliaZoomedMouseMove, false );
     } else { // if ( "none" == radio.value ) {
-        canvas.removeEventListener( 'mousemove', previewZoomMouseMove, false );
-
         fractalPreview.style.display = 'none';
     }
 }
