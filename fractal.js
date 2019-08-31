@@ -21,6 +21,8 @@ var cycleCtx;
 // Variables for tracking individual iterations
 var traceR;
 var traceI;
+var traceJ;
+var traceK;
 var lastTraceR;
 var lastTraceI;
 var traceCR;
@@ -33,6 +35,8 @@ var traceFast;
 function setupIter( cR, cI, traceFast ) {
     traceR = 0;
     traceI = 0
+    traceJ = 0
+    traceK = 0
     lastTraceR = 0;
     lastTraceI = 0;
     traceIter = 0;
@@ -43,15 +47,18 @@ function setupIter( cR, cI, traceFast ) {
 
 // Return true if done iterating
 function iterLoop() {
-    var rr = 0;
-    var ii = 0;
-    var ri = 0;
+    var rr = traceR * traceR;
+    var ii = traceI * traceI;
+    var jj = traceJ * traceJ;
+    var kk = traceK * traceK;
+    var ri = traceR * traceI;
+    var rj = traceR * traceJ;
+    var rk = traceR * traceK;
 
-    ri = traceR * traceI;
-    rr = traceR * traceR;
-    ii = traceI * traceI;
-    traceR = rr - ii + traceCR;
-    traceI = ri + ri + traceCI;
+    traceR = rr - ii - jj - kk + traceCR;
+    traceI = 2 * ri + traceCI;
+    traceJ = 2 * rj;
+    traceK = 2 * rk;
 
     traceIter++
 
@@ -63,13 +70,17 @@ function iterLoop() {
 }
 
 function mandelIter( cx, cy, juliaR, juliaI, forTrace ) {
-    var x = 0.0;
-    var y = 0.0;
-    var xx = 0;
-    var yy = 0;
-    var xy = 0;
+    var r = 0.0;
+    var i = 0.0;
+    var j = 0.0;
+    var k = 0.0;
+
+    var rr = 0.0;
+    var ii = 0.0;
+    var jj = 0.0;
+    var kk = 0.0;
  
-    var i;
+    var iter;
     var minDistance = Infinity;
     var cycle = 0;
     var cycleR = cx;
@@ -80,47 +91,54 @@ function mandelIter( cx, cy, juliaR, juliaI, forTrace ) {
     if( juliaR && juliaI ) {
         adderR = juliaR;
         adderI = juliaI;
-        x = cx;
-        y = cy;
+        r = cx;
+        i = cy;
     } else {
         adderR = cx;
         adderI = cy;
     }
-    for( i = 0; ( i <= maxIter ) && ( xx + yy <= 4 ); i++ ) {
-        xy = x * y;
-        xx = x * x;
-        yy = y * y;
-        x = xx - yy + adderR;
-        y = xy + xy + adderI;
+    for( iter = 0; ( iter <= maxIter ) && ( rr + ii + jj + kk <= 4 ); iter++ ) {
+        rr = r * r;
+        ii = i * i;
+        jj = j * j;
+        kk = k * k;
+        var ri = r * i;
+        var rj = r * j;
+        var rk = r * k;
 
-        if( i != 0 ) {
-            var distance = Math.abs( x - cx ) + Math.abs( y - cy );
+        r = rr - ii - jj - kk + adderR;
+        i = 2 * ri + adderI;
+        j = 2 * rj;
+        k = 2 * rk;
+
+        if( iter != 0 ) {
+            var distance = Math.abs( r - cx ) + Math.abs( i - cy );
             if( distance < equalityLimit ) {
                 if( false == forTrace ) {
-                    i = maxIter + 1;
+                    iter = maxIter + 1;
                 }
                 break;
             } else if( ( distance * 10 ) < minDistance ) {
                 // This is significantly closer, this is probably the actual cycle number
                 minDistance = distance;
-                cycle = i;
+                cycle = iter;
             }
         }
 
-        if( ( 0 != cycle ) && ( 0 == ( i % cycle ) ) ) {
-            var distance = Math.abs( x - cycleR ) + Math.abs( y - cycleI );
+        if( ( 0 != cycle ) && ( 0 == ( iter % cycle ) ) ) {
+            var distance = Math.abs( r - cycleR ) + Math.abs( i - cycleI );
             if( distance < equalityLimit ) {
                 if( false == forTrace ) {
-                    i = maxIter + 1;
+                    iter = maxIter + 1;
                 }
                 break;
             } else {
-                cycleR = x;
-                cycleI = y;
+                cycleR = r;
+                cycleI = i;
             }
         }
     }
-    return i;
+    return iter;
 }
 
 function mandelbrot(canvas, saveImg, xmin, xmax, ymin, ymax, juliaR, juliaI ) {
