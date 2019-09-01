@@ -199,8 +199,9 @@ function canvasClick() {
 }
 
 function iterationTrace() {
+    cycleCtx.strokeStyle = "#FF8C00";
+
     if( false == traceFast ) {
-        cycleCtx.strokeStyle = "#999999";
         cycleCtx.beginPath();
         cycleCtx.moveTo( getX( lastTraceR ), getY( lastTraceI ) );
         cycleCtx.lineTo( getX( traceR ), getY( traceI ) );
@@ -216,7 +217,9 @@ function iterationTrace() {
         traceTimeout = setTimeout( iterationTrace, 100 );
     }
 
-    cycleCtx.strokeStyle = "#FFFFFF";
+    if( false == traceFast ) {
+        cycleCtx.strokeStyle = "#FFFFFF";
+    }
     cycleCtx.beginPath();
     cycleCtx.moveTo( getX( lastTraceR ), getY( lastTraceI ) );
     cycleCtx.lineTo( getX( traceR ), getY( traceI ) );
