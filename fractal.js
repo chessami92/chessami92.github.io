@@ -262,6 +262,12 @@ function iterationTrace() {
 }
 
 function canvasMouseMove() {
+    var touches = event.changedTouches;
+    if( touches && event.touches.length == 1 ) {
+        event.clientX = touches[0].clientX;
+        event.clientY = touches[0].clientY;
+    }
+
     clearTimeout( traceTimeout );
 
     // Copy off the old image and set up a new context
@@ -282,6 +288,12 @@ function canvasMouseMove() {
 }
 
 function previewZoomMouseMove() {
+    var touches = event.changedTouches;
+    if( touches && touches.length == 1 ) {
+        event.clientX = touches[0].clientX;
+        event.clientY = touches[0].clientY;
+    }
+
     var centerReal = getReal( event.clientX );
     var centerI = getI( event.clientY );
     var zoomWidth = width / 32;
@@ -297,6 +309,12 @@ function previewZoomMouseMove() {
 }
 
 function previewJuliaMouseMove() {
+    var touches = event.changedTouches;
+    if( touches && touches.length == 1 ) {
+        event.clientX = touches[0].clientX;
+        event.clientY = touches[0].clientY;
+    }
+
     var centerReal = getReal( event.clientX );
     var centerI = getI( event.clientY );
 
@@ -313,6 +331,12 @@ function previewJuliaMouseMove() {
 }
 
 function previewJuliaZoomedMouseMove() {
+    var touches = event.changedTouches;
+    if( touches && touches.length == 1 ) {
+        event.clientX = touches[0].clientX;
+        event.clientY = touches[0].clientY;
+    }
+
     var centerReal = getReal( event.clientX );
     var centerI = getI( event.clientY );
 
@@ -422,12 +446,15 @@ function handleCycleClick( radio ) {
 
     if( "fast" == radio.value ) {
         canvas.addEventListener( 'mousemove', canvasMouseMove, false );
+        canvas.addEventListener( 'touchmove', canvasMouseMove, false );
         traceFast = true;
     } else if( "slow" == radio.value ) {
         canvas.addEventListener( 'mousemove', canvasMouseMove, false );
+        canvas.addEventListener( 'touchmove', canvasMouseMove, false );
         traceFast = false;
     } else { // if ( "none" == radio.value ) {
         canvas.removeEventListener( 'mousemove', canvasMouseMove, false );
+        canvas.removeEventListener( 'touchmove', canvasMouseMove, false );
 
         // Restore the old image
         var ctx = canvas.getContext( '2d' );
@@ -453,15 +480,21 @@ function handlePreviewClick( radio ) {
     previewType = radio.value;
 
     canvas.removeEventListener( 'mousemove', previewZoomMouseMove, false );
+    canvas.removeEventListener( 'touchmove', previewZoomMouseMove, false );
     canvas.removeEventListener( 'mousemove', previewJuliaMouseMove, false );
+    canvas.removeEventListener( 'touchmove', previewJuliaMouseMove, false );
     canvas.removeEventListener( 'mousemove', previewJuliaZoomedMouseMove, false );
+    canvas.removeEventListener( 'touchmove', previewJuliaZoomedMouseMove, false );
 
     if( "zoom" == radio.value ) {
         canvas.addEventListener( 'mousemove', previewZoomMouseMove, false );
+        canvas.addEventListener( 'touchmove', previewZoomMouseMove, false );
     } else if( "julia" == radio.value ) {
         canvas.addEventListener( 'mousemove', previewJuliaMouseMove, false );
+        canvas.addEventListener( 'touchmove', previewJuliaMouseMove, false );
     } else if( "juliaZoom" == radio.value ) {
         canvas.addEventListener( 'mousemove', previewJuliaZoomedMouseMove, false );
+        canvas.addEventListener( 'touchmove', previewJuliaZoomedMouseMove, false );
     } else { // if ( "none" == radio.value ) {
         fractalPreview.style.display = 'none';
     }
