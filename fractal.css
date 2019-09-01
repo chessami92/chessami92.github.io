@@ -28,3 +28,13 @@ html, body {
     padding: 4px;
     border-radius: 5px;
 }
+.jk {
+    position: absolute;
+    background-color: #FFFFFF;
+    top: 60px;
+    padding: 4px;
+    border-radius: 5px;
+}
+.slider {
+  height: 10px;
+}

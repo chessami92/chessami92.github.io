@@ -20,6 +20,12 @@
             <input type="radio" name="preview" value="juliaZoom" onclick="handlePreviewClick( this )">Zoomed Julia
             <input type="radio" name="preview" value="none" checked onclick="handlePreviewClick( this )">None
         </span>
+        <span class="jk" id="jkVals">
+            j:
+            <input type="range" min="-2" max="2" step="0.05" value="0" class="slider" id="j" oninput="handleSliderInput( this )" onchange="handleSliderChange( this )">
+            k:
+            <input type="range" min="-2" max="2" step="0.05" value="0" class="slider" id="k" oninput="handleSliderInput( this )" onchange="handleSliderChange( this )">
+        </span>
         <canvas id="fractalPreview"></canvas>
         <canvas id="fractal"></canvas>
     </body>

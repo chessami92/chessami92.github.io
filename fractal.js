@@ -7,6 +7,8 @@ var width;
 var height;
 var startReal;
 var startI;
+var centerJ;
+var centerK;
 
 // Radio options
 var cycleType;
@@ -40,7 +42,7 @@ function setupIter( cR, cI, traceFast ) {
     lastTraceR = 0;
     lastTraceI = 0;
     traceIter = 0;
-    traceMaxIter = mandelIter( cR, cI, null, null, !traceFast );
+    traceMaxIter = mandelIter( cR, cI, centerJ, centerK, null, null, !traceFast );
     traceCR = cR;
     traceCI = cI;
 }
@@ -57,8 +59,8 @@ function iterLoop() {
 
     traceR = rr - ii - jj - kk + traceCR;
     traceI = 2 * ri + traceCI;
-    traceJ = 2 * rj;
-    traceK = 2 * rk;
+    traceJ = 2 * rj + centerJ;
+    traceK = 2 * rk + centerK;
 
     traceIter++
 
@@ -69,7 +71,7 @@ function iterLoop() {
     }
 }
 
-function mandelIter( cx, cy, juliaR, juliaI, forTrace ) {
+function mandelIter( cr, ci, cj, ck, juliaR, juliaI, forTrace ) {
     var r = 0.0;
     var i = 0.0;
     var j = 0.0;
@@ -83,19 +85,25 @@ function mandelIter( cx, cy, juliaR, juliaI, forTrace ) {
     var iter;
     var minDistance = Infinity;
     var cycle = 0;
-    var cycleR = cx;
-    var cycleI = cy;
+    var cycleR = cr;
+    var cycleI = ci;
 
     var adderR;
     var adderI;
+    var adderJ;
+    var adderK;
     if( juliaR && juliaI ) {
         adderR = juliaR;
         adderI = juliaI;
-        r = cx;
-        i = cy;
+        adderJ = cj;
+        adderK = ck;
+        r = cr;
+        i = ci;
     } else {
-        adderR = cx;
-        adderI = cy;
+        adderR = cr;
+        adderI = ci;
+        adderJ = cj;
+        adderK = ck;
     }
     for( iter = 0; ( iter <= maxIter ) && ( rr + ii + jj + kk <= 4 ); iter++ ) {
         rr = r * r;
@@ -108,11 +116,11 @@ function mandelIter( cx, cy, juliaR, juliaI, forTrace ) {
 
         r = rr - ii - jj - kk + adderR;
         i = 2 * ri + adderI;
-        j = 2 * rj;
-        k = 2 * rk;
+        j = 2 * rj + adderJ;
+        k = 2 * rk + adderK;
 
         if( iter != 0 ) {
-            var distance = Math.abs( r - cx ) + Math.abs( i - cy );
+            var distance = Math.abs( r - cr ) + Math.abs( i - ci );
             if( distance < equalityLimit ) {
                 if( false == forTrace ) {
                     iter = maxIter + 1;
@@ -141,7 +149,7 @@ function mandelIter( cx, cy, juliaR, juliaI, forTrace ) {
     return iter;
 }
 
-function mandelbrot(canvas, saveImg, xmin, xmax, ymin, ymax, juliaR, juliaI ) {
+function mandelbrot(canvas, saveImg, xmin, xmax, ymin, ymax, cj, ck, juliaR, juliaI ) {
     var width = canvas.width;
     var height = canvas.height;
  
@@ -153,7 +161,7 @@ function mandelbrot(canvas, saveImg, xmin, xmax, ymin, ymax, juliaR, juliaI ) {
         for (var iy = 0; iy < height; ++iy) {
             var x = xmin + (xmax - xmin) * ix / (width - 1);
             var y = ymin + (ymax - ymin) * iy / (height - 1);
-            var i = mandelIter( x, y, juliaR, juliaI, false );
+            var i = mandelIter( x, y, cj, ck, juliaR, juliaI, false );
             var ppos = 4 * (width * iy + ix);
  
             if (i > maxIter) {
@@ -204,16 +212,23 @@ function getY( i ) {
     return ( i - startI ) / height * window.innerHeight;
 }
 
+function loadPage( centerReal, centerI ) {
+    window.location.href = window.location.href.substr( 0, window.location.href.lastIndexOf( '?' ) ) +
+        "?centerReal=" + centerReal +
+        "&centerI=" + centerI +
+        "&centerJ=" + centerJ +
+        "&centerK=" + centerK +
+        "&width=" + width +
+        "&cycle=" + cycleType +
+        "&preview=" + previewType ;
+
+}
+
 function canvasClick() {
     var centerReal = getReal( event.clientX );
     var centerI = getI( event.clientY );
     width /= 2;
-    window.location.href = window.location.href.substr( 0, window.location.href.lastIndexOf( '?' ) ) +
-        "?centerReal=" + centerReal +
-        "&centerI=" + centerI +
-        "&width=" + width +
-        "&cycle=" + cycleType +
-        "&preview=" + previewType ;
+    loadPage( centerReal, centerI );
 }
 
 function iterationTrace() {
@@ -278,7 +293,7 @@ function previewZoomMouseMove() {
 
     var fractalPreview = document.getElementById( 'fractalPreview' );
 
-    mandelbrot( fractalPreview, false, rMin, rMax, iMin, iMax, null, null );
+    mandelbrot( fractalPreview, false, rMin, rMax, iMin, iMax, centerJ, centerK, null, null );
 }
 
 function previewJuliaMouseMove() {
@@ -294,7 +309,7 @@ function previewJuliaMouseMove() {
 
     var fractalPreview = document.getElementById( 'fractalPreview' );
 
-    mandelbrot( fractalPreview, false, rMin, rMax, iMin, iMax, centerReal, centerI );
+    mandelbrot( fractalPreview, false, rMin, rMax, iMin, iMax, centerJ, centerK, centerReal, centerI );
 }
 
 function previewJuliaZoomedMouseMove() {
@@ -310,7 +325,7 @@ function previewJuliaZoomedMouseMove() {
 
     var fractalPreview = document.getElementById( 'fractalPreview' );
 
-    mandelbrot( fractalPreview, false, rMin, rMax, iMin, iMax, centerReal, centerI );
+    mandelbrot( fractalPreview, false, rMin, rMax, iMin, iMax, centerJ, centerK, centerReal, centerI );
 }
  
 function main() {
@@ -326,12 +341,20 @@ function main() {
 
     var centerReal = parseFloat( queryDict["centerReal"] );
     var centerI = parseFloat( queryDict["centerI"] );
+    centerJ = parseFloat( queryDict["centerJ"] );
+    centerK = parseFloat( queryDict["centerK"] );
     width = parseFloat( queryDict["width"] );
     if( !centerReal ) {
         centerReal = -0.5;
     }
     if( !centerI ) {
         centerI = 0;
+    }
+    if( !centerJ ) {
+        centerJ = 0;
+    }
+    if( !centerK ) {
+        centerK = 0;
     }
     if( !width ) {
         // At least show -2 to 1 on real, -1 to 1 on imaginary
@@ -355,12 +378,14 @@ function main() {
 
     var date = new Date();
     var startMs = date.getTime();
-    mandelbrot( canvas, true, startReal, endReal, startI, endI, null, null );
+    mandelbrot( canvas, true, startReal, endReal, startI, endI, centerJ, centerK, null, null );
     var date = new Date();
     console.log( 'Draw took ', date.getTime() - startMs, 'ms' );
 
     setCycleType( queryDict['cycle'] );
     setPreviewType( queryDict['preview'] );
+    document.getElementById( 'j' ).value = centerJ;
+    document.getElementById( 'k' ).value = centerK;
 }
 
 function getChecked( groupName ) {
@@ -419,10 +444,13 @@ function setPreviewType( urlPreviewType ) {
     }
 }
 
-function handlePreviewClick( radio ) {
-    previewType = radio.value;
+function showPreview() {
     var fractalPreview = document.getElementById( 'fractalPreview' );
     fractalPreview.style.display = 'block';
+}
+
+function handlePreviewClick( radio ) {
+    previewType = radio.value;
 
     canvas.removeEventListener( 'mousemove', previewZoomMouseMove, false );
     canvas.removeEventListener( 'mousemove', previewJuliaMouseMove, false );
@@ -437,4 +465,38 @@ function handlePreviewClick( radio ) {
     } else { // if ( "none" == radio.value ) {
         fractalPreview.style.display = 'none';
     }
+
+    showPreview();
+}
+
+function handleSliderInput( slider ) {
+    var val = parseFloat( slider.value );
+    var cj, ck;
+    if( 'j' == slider.id ) {
+        cj = val;
+        ck = centerK;
+    } else {
+        cj = centerJ;
+        ck = val;
+    }
+
+    showPreview();
+    var fractalPreview = document.getElementById( 'fractalPreview' );
+
+    var endReal = startReal + width;
+    var endI = startI + height;
+    mandelbrot( fractalPreview, false, startReal, endReal, startI, endI, cj, ck, null, null );
+}
+
+function handleSliderChange( slider ) {
+    var val = parseFloat( slider.value );
+    if( 'j' == slider.id ) {
+        centerJ = val;
+    } else {
+        centerK = val;
+    }
+
+    var centerReal = startReal + width / 2;
+    var centerI = startI + height / 2;
+    loadPage( centerReal, centerI );
 }
